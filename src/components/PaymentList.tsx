@@ -1,6 +1,11 @@
 import React from 'react';
+import { Transaction } from '../utils/api';
 
-export const PaymentList: React.FC = () => {
+interface PaymentListProps {
+	transactions: Transaction[];
+}
+
+export const PaymentList: React.FC<PaymentListProps> = ({ transactions }) => {
 	const payments = [
 		{
 			id: 1,
@@ -29,9 +34,9 @@ export const PaymentList: React.FC = () => {
 							</tr>
 						</thead>
 						<tbody>
-							{payments.map((payment) => (
+							{transactions.map((payment: Transaction) => (
 								<tr key={payment.id} className="border-b">
-									<td className="py-3">{payment.customer}</td>
+									<td className="py-3">{payment.customerName}</td>
 									<td className="py-3">{payment.amount}</td>
 									<td className="py-3">{payment.status}</td>
 									<td className="py-3">{payment.date}</td>

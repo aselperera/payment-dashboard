@@ -1,9 +1,12 @@
 'use client';
 
-import React, { createContext, useContext, useState, ReactNode } from 'react';
+import { createContext, useContext, useState, ReactNode } from 'react';
+import { mockApi } from '../utils/api';
 
 interface AuthContextType {
 	isAuthenticated: boolean;
+	isLoading: boolean;
+	user: { name: string; email: string } | null;
 	login: (email: string, password: string) => Promise<boolean>;
 	logout: () => void;
 }
@@ -12,25 +15,43 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
 	const [isAuthenticated, setIsAuthenticated] = useState(false);
+	const [isLoading, setIsLoading] = useState(false);
+	const [user, setUser] = useState<{ name: string; email: string } | null>(
+		null
+	);
 
 	const login = async (email: string, password: string): Promise<boolean> => {
-		// This is a mock authentication - replace with real API call
-		if (email === 'john.doe@gmail.com' && password === 'password') {
-			setIsAuthenticated(true);
-			// Store auth token in session storage
-			sessionStorage.setItem('isAuthenticated', 'true');
-			return true;
+		setIsLoading(true);
+		try {
+			const response = await mockApi.login(email, password);
+			if (response) {
+				setIsAuthenticated(true);
+				setUser({
+					name: response.user.name,
+					email: response.user.email,
+				});
+				sessionStorage.setItem('auth_token', response.token);
+				return true;
+			}
+			return false;
+		} catch (error) {
+			console.error('Login error:', error);
+			return false;
+		} finally {
+			setIsLoading(false);
 		}
-		return false;
 	};
 
 	const logout = () => {
 		setIsAuthenticated(false);
-		sessionStorage.removeItem('isAuthenticated');
+		setUser(null);
+		sessionStorage.removeItem('auth_token');
 	};
 
 	return (
-		<AuthContext.Provider value={{ isAuthenticated, login, logout }}>
+		<AuthContext.Provider
+			value={{ isAuthenticated, isLoading, user, login, logout }}
+		>
 			{children}
 		</AuthContext.Provider>
 	);
